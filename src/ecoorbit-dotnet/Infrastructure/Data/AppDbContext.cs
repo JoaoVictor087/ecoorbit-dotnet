@@ -49,7 +49,7 @@ public class AppDbContext : DbContext
             e.ToTable("FIRE_DETECTION_RESULTS");
             e.HasKey(f => f.Id);
             e.Property(f => f.Id).HasColumnName("ID");
-            e.Property(f => f.FireDetected).HasColumnName("FIRE_DETECTED");
+            e.Property(f => f.FireDetected).HasColumnName("FIRE_DETECTED").HasColumnType("NUMBER(1)").HasConversion<int>();
             e.Property(f => f.RiskLevel).HasColumnName("RISK_LEVEL").HasConversion<int>();
             e.Property(f => f.ConfidenceScore).HasColumnName("CONFIDENCE_SCORE");
             e.Property(f => f.Notes).HasColumnName("NOTES").HasMaxLength(1000);
