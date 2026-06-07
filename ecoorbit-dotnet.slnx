@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ecoorbit-dotnet/ecoorbit-dotnet.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ecoorbit-dotnet.Tests/ecoorbit-dotnet.Tests.csproj" />
+  </Folder>
+</Solution>
