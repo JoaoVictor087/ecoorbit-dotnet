@@ -4,6 +4,7 @@ using ecoorbit_dotnet.Application.Services;
 using ecoorbit_dotnet.Domain.Entities;
 using ecoorbit_dotnet.Infrastructure.Repositories.Interfaces;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -16,6 +17,7 @@ public class SatelliteImageServiceTests
     private readonly Mock<IFireDetectionResultRepository> _resultRepoMock;
     private readonly Mock<IFlaskAnalysisClient> _flaskClientMock;
     private readonly Mock<ILogger<SatelliteImageService>> _loggerMock;
+    private readonly Mock<IServiceScopeFactory> _scopeFactoryMock;
     private readonly SatelliteImageService _service;
 
     public SatelliteImageServiceTests()
@@ -25,13 +27,22 @@ public class SatelliteImageServiceTests
         _resultRepoMock = new Mock<IFireDetectionResultRepository>();
         _flaskClientMock = new Mock<IFlaskAnalysisClient>();
         _loggerMock = new Mock<ILogger<SatelliteImageService>>();
+        _scopeFactoryMock = new Mock<IServiceScopeFactory>();
+
+        var scopeMock = new Mock<IServiceScope>();
+        var serviceProviderMock = new Mock<IServiceProvider>();
+        serviceProviderMock.Setup(p => p.GetService(typeof(IFireDetectionResultRepository)))
+            .Returns(_resultRepoMock.Object);
+        scopeMock.Setup(s => s.ServiceProvider).Returns(serviceProviderMock.Object);
+        _scopeFactoryMock.Setup(f => f.CreateScope()).Returns(scopeMock.Object);
 
         _service = new SatelliteImageService(
             _imageRepoMock.Object,
             _userRepoMock.Object,
             _resultRepoMock.Object,
             _flaskClientMock.Object,
-            _loggerMock.Object);
+            _loggerMock.Object,
+            _scopeFactoryMock.Object);
     }
 
     [Fact]
@@ -83,7 +94,6 @@ public class SatelliteImageServiceTests
         var user = new User { Id = userId, Name = "Analyst", Email = "a@a.com" };
         var dto = new CreateSatelliteImageDto
         {
-            ImageUrl = "http://example.com/img.png",
             Region = "Cerrado",
             Latitude = -15.0,
             Longitude = -47.0,
@@ -92,7 +102,7 @@ public class SatelliteImageServiceTests
 
         _userRepoMock.Setup(r => r.GetByIdAsync(userId)).ReturnsAsync(user);
         _imageRepoMock.Setup(r => r.AddAsync(It.IsAny<SatelliteImage>())).Returns(Task.CompletedTask);
-        _flaskClientMock.Setup(f => f.AnalyzeAsync(It.IsAny<double>(), It.IsAny<double>(), It.IsAny<string>()))
+        _flaskClientMock.Setup(f => f.AnalyzeAsync(It.IsAny<double>(), It.IsAny<double>(), It.IsAny<DateTime>()))
             .ReturnsAsync((ecoorbit_dotnet.Application.DTOs.Flask.FlaskAnalysisResponseDto?)null);
 
         // Act
@@ -111,7 +121,6 @@ public class SatelliteImageServiceTests
         var userId = Guid.NewGuid();
         var dto = new CreateSatelliteImageDto
         {
-            ImageUrl = "http://example.com/img.png",
             Region = "Cerrado",
             Latitude = -15.0,
             Longitude = -47.0,
