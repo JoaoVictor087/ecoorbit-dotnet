@@ -1,1 +1,8 @@
 /.idea/
+bin/
+obj/
+*.user
+.vs/
+.idea/
+*.db
+appsettings.Development.json
