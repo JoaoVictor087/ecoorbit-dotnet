@@ -1,8 +1,10 @@
 using ecoorbit_dotnet.Application.DTOs.SatelliteImage;
+using ecoorbit_dotnet.Application.Interfaces;
 using ecoorbit_dotnet.Application.Services;
 using ecoorbit_dotnet.Domain.Entities;
 using ecoorbit_dotnet.Infrastructure.Repositories.Interfaces;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace ecoorbit_dotnet.Tests.Services;
@@ -11,13 +13,25 @@ public class SatelliteImageServiceTests
 {
     private readonly Mock<ISatelliteImageRepository> _imageRepoMock;
     private readonly Mock<IUserRepository> _userRepoMock;
+    private readonly Mock<IFireDetectionResultRepository> _resultRepoMock;
+    private readonly Mock<IFlaskAnalysisClient> _flaskClientMock;
+    private readonly Mock<ILogger<SatelliteImageService>> _loggerMock;
     private readonly SatelliteImageService _service;
 
     public SatelliteImageServiceTests()
     {
         _imageRepoMock = new Mock<ISatelliteImageRepository>();
         _userRepoMock = new Mock<IUserRepository>();
-        _service = new SatelliteImageService(_imageRepoMock.Object, _userRepoMock.Object);
+        _resultRepoMock = new Mock<IFireDetectionResultRepository>();
+        _flaskClientMock = new Mock<IFlaskAnalysisClient>();
+        _loggerMock = new Mock<ILogger<SatelliteImageService>>();
+
+        _service = new SatelliteImageService(
+            _imageRepoMock.Object,
+            _userRepoMock.Object,
+            _resultRepoMock.Object,
+            _flaskClientMock.Object,
+            _loggerMock.Object);
     }
 
     [Fact]
@@ -78,6 +92,8 @@ public class SatelliteImageServiceTests
 
         _userRepoMock.Setup(r => r.GetByIdAsync(userId)).ReturnsAsync(user);
         _imageRepoMock.Setup(r => r.AddAsync(It.IsAny<SatelliteImage>())).Returns(Task.CompletedTask);
+        _flaskClientMock.Setup(f => f.AnalyzeAsync(It.IsAny<double>(), It.IsAny<double>(), It.IsAny<string>()))
+            .ReturnsAsync((ecoorbit_dotnet.Application.DTOs.Flask.FlaskAnalysisResponseDto?)null);
 
         // Act
         var result = await _service.CreateAsync(dto, userId);
@@ -86,5 +102,28 @@ public class SatelliteImageServiceTests
         result.Should().NotBeNull();
         result.Region.Should().Be("Cerrado");
         result.UserId.Should().Be(userId);
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldThrow_WhenUserNotFound()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var dto = new CreateSatelliteImageDto
+        {
+            ImageUrl = "http://example.com/img.png",
+            Region = "Cerrado",
+            Latitude = -15.0,
+            Longitude = -47.0,
+            CapturedAt = DateTime.UtcNow
+        };
+
+        _userRepoMock.Setup(r => r.GetByIdAsync(userId)).ReturnsAsync((User?)null);
+
+        // Act
+        var act = async () => await _service.CreateAsync(dto, userId);
+
+        // Assert
+        await act.Should().ThrowAsync<KeyNotFoundException>();
     }
 }

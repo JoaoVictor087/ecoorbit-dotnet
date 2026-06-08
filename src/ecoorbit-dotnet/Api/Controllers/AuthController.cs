@@ -1,5 +1,6 @@
 using ecoorbit_dotnet.Application.DTOs.Auth;
 using ecoorbit_dotnet.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ecoorbit_dotnet.Api.Controllers;

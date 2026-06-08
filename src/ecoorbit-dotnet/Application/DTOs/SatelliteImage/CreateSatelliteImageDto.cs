@@ -5,10 +5,6 @@ namespace ecoorbit_dotnet.Application.DTOs.SatelliteImage;
 public class CreateSatelliteImageDto
 {
     [Required]
-    [MaxLength(500)]
-    public string ImageUrl { get; set; } = string.Empty;
-
-    [Required]
     [MaxLength(200)]
     public string Region { get; set; } = string.Empty;
 

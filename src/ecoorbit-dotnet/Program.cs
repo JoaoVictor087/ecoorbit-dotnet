@@ -3,6 +3,7 @@ using ecoorbit_dotnet.Api.Middleware;
 using ecoorbit_dotnet.Application.Interfaces;
 using ecoorbit_dotnet.Application.Services;
 using ecoorbit_dotnet.Infrastructure.Data;
+using ecoorbit_dotnet.Infrastructure.Http;
 using ecoorbit_dotnet.Infrastructure.Repositories.Implementations;
 using ecoorbit_dotnet.Infrastructure.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -40,6 +41,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+
+builder.Services.AddHttpClient<IFlaskAnalysisClient, FlaskAnalysisClient>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["FlaskApi:BaseUrl"]!);
+    client.Timeout = TimeSpan.FromSeconds(60);
+});
+
+builder.Services.AddHttpClient("nasa", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 builder.Services.AddControllers();
 

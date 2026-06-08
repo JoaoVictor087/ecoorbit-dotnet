@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ecoorbit-dotnet.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+69ff8774b2ec9f77216b3d5a5349a7b97ca3fa23")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+306cad634f3626d832a86ccc9d681e5304baa52a")]
 [assembly: System.Reflection.AssemblyProductAttribute("ecoorbit-dotnet.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ecoorbit-dotnet.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
