@@ -1,0 +1,90 @@
+using ecoorbit_dotnet.Application.DTOs.SatelliteImage;
+using ecoorbit_dotnet.Application.Services;
+using ecoorbit_dotnet.Domain.Entities;
+using ecoorbit_dotnet.Infrastructure.Repositories.Interfaces;
+using FluentAssertions;
+using Moq;
+
+namespace ecoorbit_dotnet.Tests.Services;
+
+public class SatelliteImageServiceTests
+{
+    private readonly Mock<ISatelliteImageRepository> _imageRepoMock;
+    private readonly Mock<IUserRepository> _userRepoMock;
+    private readonly SatelliteImageService _service;
+
+    public SatelliteImageServiceTests()
+    {
+        _imageRepoMock = new Mock<ISatelliteImageRepository>();
+        _userRepoMock = new Mock<IUserRepository>();
+        _service = new SatelliteImageService(_imageRepoMock.Object, _userRepoMock.Object);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ShouldReturnDto_WhenImageExists()
+    {
+        // Arrange
+        var imageId = Guid.NewGuid();
+        var image = new SatelliteImage
+        {
+            Id = imageId,
+            ImageUrl = "http://example.com/img.png",
+            Region = "Amazônia",
+            Latitude = -3.0,
+            Longitude = -60.0,
+            CapturedAt = DateTime.UtcNow,
+            UserId = Guid.NewGuid(),
+            User = new User { Name = "Analyst" }
+        };
+        _imageRepoMock.Setup(r => r.GetByIdAsync(imageId)).ReturnsAsync(image);
+
+        // Act
+        var result = await _service.GetByIdAsync(imageId);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Id.Should().Be(imageId);
+        result.Region.Should().Be("Amazônia");
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ShouldThrow_WhenImageNotFound()
+    {
+        // Arrange
+        var imageId = Guid.NewGuid();
+        _imageRepoMock.Setup(r => r.GetByIdAsync(imageId)).ReturnsAsync((SatelliteImage?)null);
+
+        // Act
+        var act = async () => await _service.GetByIdAsync(imageId);
+
+        // Assert
+        await act.Should().ThrowAsync<KeyNotFoundException>();
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldReturnDto_WhenUserExists()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var user = new User { Id = userId, Name = "Analyst", Email = "a@a.com" };
+        var dto = new CreateSatelliteImageDto
+        {
+            ImageUrl = "http://example.com/img.png",
+            Region = "Cerrado",
+            Latitude = -15.0,
+            Longitude = -47.0,
+            CapturedAt = DateTime.UtcNow
+        };
+
+        _userRepoMock.Setup(r => r.GetByIdAsync(userId)).ReturnsAsync(user);
+        _imageRepoMock.Setup(r => r.AddAsync(It.IsAny<SatelliteImage>())).Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _service.CreateAsync(dto, userId);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Region.Should().Be("Cerrado");
+        result.UserId.Should().Be(userId);
+    }
+}
