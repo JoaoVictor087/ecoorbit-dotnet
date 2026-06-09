@@ -23,6 +23,92 @@ O EcoOrbit é um sistema de detecção de incêndios via imagens de satélite. O
 
 Tudo isso acontece de forma assíncrona em background — o endpoint responde imediatamente com 201 e o resultado de detecção fica disponível em segundos.
 
+## Arquitetura de entidades
+
+```mermaid
+erDiagram
+    USERS ||--o{ SATELLITE_IMAGES : "1:N"
+    SATELLITE_IMAGES ||--o| FIRE_DETECTION_RESULTS : "N:N"
+
+    USERS {
+        uuid Id PK
+        string Name
+        string Email
+        string PasswordHash
+        string Role
+        datetime CreatedAt
+    }
+
+    SATELLITE_IMAGES {
+        uuid Id PK
+        string ImageUrl
+        string Region
+        double Latitude
+        double Longitude
+        datetime CapturedAt
+        datetime SubmittedAt
+        uuid UserId FK
+    }
+
+    FIRE_DETECTION_RESULTS {
+        uuid Id PK
+        bool FireDetected
+        int RiskLevel
+        double ConfidenceScore
+        string Notes
+        datetime AnalyzedAt
+        uuid SatelliteImageId FK
+    }
+```
+## Pipeline do projet
+
+```mermaid
+sequenceDiagram
+    actor Cliente
+    participant API as API .NET
+    participant Oracle
+    participant NASA as NASA GIBS
+    participant Flask as Flask Azure
+
+    Cliente->>API: POST /api/satelliteimages
+    API->>Oracle: Salva imagem
+    API-->>Cliente: 201 Created
+
+    Note over API,Flask: Background Task
+
+    API->>NASA: GET snapshot BBOX + TIME
+    NASA-->>API: JPEG 512x512
+    API->>Flask: POST /api/v1/predict multipart
+    Flask-->>API: fogo_detectado + confianca_percentual
+    API->>Oracle: Salva FireDetectionResult
+```
+
+## Fluxo de autenticação
+
+```mermaid
+sequenceDiagram
+    actor Cliente
+    participant API as API .NET
+    participant Oracle
+
+    Cliente->>API: POST /api/auth/register ou /login
+    API->>Oracle: Busca ou cria usuário
+    Oracle-->>API: User
+    API-->>Cliente: token JWT + expiresAt
+
+    Cliente->>API: GET /api/satelliteimages (Bearer token)
+    API->>API: Valida JWT
+    API-->>Cliente: 200 OK ou 401 Unauthorized
+```
+
+## Camada de arquitetura
+```mermaid
+graph TD
+    A[API Layer<br/>Controllers · Middleware] --> B[Application Layer<br/>Services · Interfaces · DTOs]
+    B --> C[Infrastructure Layer<br/>Repositories · AppDbContext · HttpClients]
+    C --> D[Domain Layer<br/>Entities · Enums]
+```
+
 ## Tecnologias
 | Tecnologia | Uso |
 | --- | --- |
@@ -220,4 +306,3 @@ ecoorbit-dotnet/
 | 2 | Medium | Fogo detectado, com nível de confiança entre 50% e 70%. |
 | 3 | High | Fogo detectado, com nível de confiança entre 70% e 85%. |
 | 4 | Critical | Fogo detectado, com alto índice de confiança superior a 85%. |
-EOF
