@@ -8,6 +8,8 @@ FIAP — Análise e Desenvolvimento de Sistemas
 * Vinicius Kenzo Tocuyosi - RM 559982
 * Lucas Gomes - RM 559607
 
+[Video de aprensentação](https://www.youtube.com/watch?v=YMkqZ-ai-gw)
+
 ## Repositórios do Projeto
 | Componente | Repositório |
 | --- | --- |
